@@ -1,0 +1,4 @@
+VPCEnvironment: Development
+VPCDevCIDR: 172.22.0.0/16
+AWSDefaultRegion: us-east-1
+CleanupSubnets: true
