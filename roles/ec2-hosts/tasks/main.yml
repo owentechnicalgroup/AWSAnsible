@@ -1,2 +1,10 @@
+- name: setup to assume role
+  sts_assume_role:
+    role_arn: "arn:aws:iam::872347420764:role/provisionSecurityGroup"
+    role_session_name: "EC2AutmatedProvisioning"
+    region: "{{ AWSDefaultRegion }}"
+  register: assumed_role
 
 - include: vpc-build.yml 
+
+- include: gateway-build.yml

@@ -1,9 +1,3 @@
-    - name: setup to assume role
-      sts_assume_role:
-        role_arn: "arn:aws:iam::872347420764:role/provisionSecurityGroup"
-        role_session_name: "EC2AutmatedProvisioning"
-        region: "{{ AWSDefaultRegion }}"
-      register: assumed_role
 
     - name: build primary vpc 
       ec2_vpc:
@@ -25,13 +19,13 @@
         state: present
         vpc_id: "{{ vpc.vpc_id }}"
         cidr: "{{ item.SubnetCIDR }}"
-        resource_tags: { "InstanceType": "Subnet","Environment":"{{VPCEnvironment}}", "SubnetCat":"{{item.SubnetCat}}", "WebGateway":"{{item.Internet}}"}
+        resource_tags: { "InstanceType": "Subnet","Environment":"{{VPCEnvironment}}", "SubnetCat":"{{item.SubnetCat}}"}
       register: database_subnet
       with_items:
-        - { SubnetCat: Base, SubnetCIDR: 172.22.0.0/20, Internet: Connected }
-        - { SubnetCat: Database, SubnetCIDR: 172.22.32.0/20, Internet: NotConnected }
-        - { SubnetCat: Integration, SubnetCIDR: 172.22.80.0/20, Internet: Connected }
-        - { SubnetCat: Monitoring, SubnetCIDR:  172.22.96.0/20, Internet: Not Connected }
+        - { SubnetCat: Base, SubnetCIDR: 172.22.0.0/20}
+        - { SubnetCat: Database, SubnetCIDR: 172.22.32.0/20}
+        - { SubnetCat: Integration, SubnetCIDR: 172.22.80.0/20}
+        - { SubnetCat: Monitoring, SubnetCIDR:  172.22.96.0/20}
       register: devSubnets
 
     - debug:
