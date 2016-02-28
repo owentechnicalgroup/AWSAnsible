@@ -1,0 +1,51 @@
+  - name: Get VPC Facts for gateway
+    ec2_vpc_net_facts:
+      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+      security_token: "{{ assumed_role.sts_creds.session_token }}"
+      region: "{{ AWSDefaultRegion }}"
+      filters:
+        "tag:Environment": "{{VPCEnvironment}}"
+    register: vpcDetail
+
+  - name: Build Internet Gateway for environment "{{VPCEnvironment}}"
+    ec2_vpc_igw:
+      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+      security_token: "{{ assumed_role.sts_creds.session_token }}"
+      region: "{{ AWSDefaultRegion }}"
+      vpc_id: "{{ item.id }}"
+      state: present
+    with_items: "{{ vpcDetail.vpcs }}"
+    register: igw
+
+  - name: Getting subnet facts
+    ec2_vpc_subnet_facts:
+      aws_access_key: "{{assumed_role.sts_creds.access_key}}"
+      aws_secret_key: "{{assumed_role.sts_creds.secret_key}}"
+      security_token: "{{assumed_role.sts_creds.session_token}}"
+      region: "{{ AWSDefaultRegion }}"
+      filters:
+        "tag:Environment": "{{VPCEnvironment}}"
+    register: environmentSubnets
+
+  - debug:
+      msg: "{{ environmentSubnets }}"
+
+
+  - name: Set up public subnet route table
+    ec2_vpc_route_table:
+      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+      security_token: "{{ assumed_role.sts_creds.session_token }}"
+      vpc_id: "{{ item.vpc_id }}"
+      region: "{{ AWSDefaultRegion }}"
+      tags:
+        Name: Public
+      subnets: "{{ item.id }}"
+      routes:
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ igw.gateway_id }}"
+    register: public_route_table
+    with_items: "{{ environmentSubnets.subnets }}"
+    when: '{{item.tags.WebGateway}} == "Connected"'

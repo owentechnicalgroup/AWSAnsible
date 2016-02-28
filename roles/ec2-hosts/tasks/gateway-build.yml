@@ -10,7 +10,8 @@
 
   - name: Build Internet Gateway for environment "{{VPCEnvironment}}"
     ec2_vpc_igw:
-      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
       security_token: "{{ assumed_role.sts_creds.session_token }}"
       region: "{{ AWSDefaultRegion }}"
       vpc_id: "{{ item.id }}"
@@ -18,33 +19,128 @@
     with_items: "{{ vpcDetail.vpcs }}"
     register: igw
 
-  - name: Getting subnet facts
+  - name: Get subnet facts for public subnets
     ec2_vpc_subnet_facts:
       aws_access_key: "{{assumed_role.sts_creds.access_key}}"
       aws_secret_key: "{{assumed_role.sts_creds.secret_key}}"
       security_token: "{{assumed_role.sts_creds.session_token}}"
       region: "{{ AWSDefaultRegion }}"
       filters:
-        "tag:Environment": "{{VPCEnvironment}}"
+        {"tag:Environment": "{{VPCEnvironment}}", "tag:WebGateway": "Connected"}
     register: environmentSubnets
 
-  - debug:
-      msg: "{{ environmentSubnets }}
+  - name: Get a list of public subnet IDs (used when we create the routing table)
+    set_fact: 
+      PublicGatewaySubnets: "{{environmentSubnets.subnets| map(attribute='id')|list}}"
 
+  - name: Get subnet facts for private subnets
+    ec2_vpc_subnet_facts:
+      aws_access_key: "{{assumed_role.sts_creds.access_key}}"
+      aws_secret_key: "{{assumed_role.sts_creds.secret_key}}"
+      security_token: "{{assumed_role.sts_creds.session_token}}"
+      region: "{{ AWSDefaultRegion }}"
+      filters:
+        {"tag:Environment": "{{VPCEnvironment}}", "tag:WebGateway": "NotConnected"}
+    register: environmentSubnets2
 
-  - name: Set up public subnet route table
+  - name: Get a list of private subnet IDs (used when we create the routing table)
+    set_fact:
+      PrivateGatewaySubnets: "{{environmentSubnets2.subnets| map(attribute='id')|list}}"
+      
+
+  - name: Get vpc route table detail for public routing table
+    ec2_vpc_route_table_facts:
+      aws_access_key: "{{assumed_role.sts_creds.access_key}}"
+      aws_secret_key: "{{assumed_role.sts_creds.secret_key}}"
+      security_token: "{{assumed_role.sts_creds.session_token}}"
+      region: "{{ AWSDefaultRegion }}"
+      filters:
+        "tag:Name": "{{PublicRoutingTableName}}"
+    register: publicRouteTable
+  
+  - set_fact:
+      publicRouteTableCount: "{{publicRouteTable.route_tables| length()}}"
+
+  - name: Set up public subnet route table if it does not exist
     ec2_vpc_route_table:
       aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
       aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
       security_token: "{{ assumed_role.sts_creds.session_token }}"
-      vpc_id: "{{ item.vpc_id }}"
+      vpc_id: "{{ vpcDetail.vpcs[0].id }}"
       region: "{{ AWSDefaultRegion }}"
       tags:
-        Name: Public
-      subnets: "{{ item.id }}"
+        Name: "{{PublicRoutingTableName}}"
+      subnets: "{{PublicGatewaySubnets}}"
       routes:
         - dest: 0.0.0.0/0
-          gateway_id: "{{ igw.gateway_id }}"
+          gateway_id: "{{ igw.results[0].gateway_id }}"
     register: public_route_table
-    with_items: "{{ environmentSubnets.subnets }}"
-    when: "{{item.tags.Webgateway}}" == Connected 
+    when: '"{{publicRouteTableCount}}" == "0"'
+
+  - name: Update public subnet route table if it does exist
+    ec2_vpc_route_table:
+      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+      security_token: "{{ assumed_role.sts_creds.session_token }}"
+      route_table_id: "{{ publicRouteTable.route_tables[0].id }}"
+      vpc_id: "{{ publicRouteTable.route_tables[0].vpc_id }}"
+      region: "{{ AWSDefaultRegion }}"
+      lookup: id
+      tags:
+        Name: "{{PublicRoutingTableName}}"
+      subnets: "{{PublicGatewaySubnets}}"
+      routes:
+        - dest: 0.0.0.0/0
+          gateway_id: "{{ igw.results[0].gateway_id }}"
+    when: '"{{publicRouteTableCount}}" != "0"'
+
+  - name: Get vpc route table detail for private route table
+    ec2_vpc_route_table_facts:
+      aws_access_key: "{{assumed_role.sts_creds.access_key}}"
+      aws_secret_key: "{{assumed_role.sts_creds.secret_key}}"
+      security_token: "{{assumed_role.sts_creds.session_token}}"
+      region: "{{ AWSDefaultRegion }}"
+      filters:
+        "tag:Name": "{{PrivateRoutingTableName}}"
+    register: privateRouteTable
+
+  - set_fact:
+      privateRouteTableCount: "{{privateRouteTable.route_tables| length()}}"
+
+# TODO: Finish private subnet with connection to VPN
+#
+#  - name: Set up private subnet route table if it does not exist
+#    ec2_vpc_route_table:
+#      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+#      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+#      security_token: "{{ assumed_role.sts_creds.session_token }}"
+#      vpc_id: "{{ vpcDetail.vpcs[0].id }}"
+#      region: "{{ AWSDefaultRegion }}"
+#      tags:
+#        Name: "{{PrivateRoutingTableName}}"
+#      subnets: "{{PrivateGatewaySubnets}}"
+#      routes:
+#        - dest: 0.0.0.0/0
+#          gateway_id: "{{ igw.results[0].gateway_id }}"
+#    register: private_route_table
+#    when: '"{{privateRouteTableCount}}" == "0"'
+
+# - name: Update private subnet route table if it does exist
+#    ec2_vpc_route_table:
+#      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+#      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+#      security_token: "{{ assumed_role.sts_creds.session_token }}"
+#      route_table_id: "{{ privateRouteTable.route_tables[0].id }}"
+#      vpc_id: "{{ privateRouteTable.route_tables[0].vpc_id }}"
+#      region: "{{ AWSDefaultRegion }}"
+#      tags:
+#        Name: "{{PrivateRoutingTableName}}"
+#      subnets: "{{PrivateGatewaySubnets}}"
+#      routes:
+#        - dest: 0.0.0.0/0
+#          gateway_id: "{{ igw.results[0].gateway_id }}"
+#    when: '"{{privateRouteTableCount}}" != "0"'
+
+
+
+

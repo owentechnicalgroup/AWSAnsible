@@ -1,0 +1,95 @@
+---
+- hosts: localhost
+  tasks:
+
+# Install pre-req packages and install ansible
+# sudo yum install wget
+# wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+# sudo yum install epel-release-latest-7.noarch.rpm
+# yum install ansible
+# sudo easy_install pip
+# sudo pip install ansible --upgrade
+
+
+# Get python scripts for dynamic inventory and install boto package
+# wget https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.py
+# wget https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.ini -> /etc/ansible
+# pip install boto
+
+
+  - name: create Ansible user
+    user:
+      name: icansible
+      shell: /bin/bash
+      groups: adm,wheel,systemd-journal
+      append: yes
+      generate_ssh_key: true
+    become: yes
+    become_method: sudo
+  
+  - name: Create role file structure
+    file:
+      path: ~/ansible/roles/{{item.rolename}}
+      state: directory 
+      mode: 0755
+    become: yes
+    become_user: icansible
+    become_method: sudo
+    with_items:
+    - {rolename: ansible}
+    - {rolename: common}
+    - {rolename: ec2-hosts}
+
+  - name: Create role file structure
+    file:
+      path: ~/ansible/roles/{{item.rolename}}/tasks
+      state: directory
+      mode: 0755
+    become: yes
+    become_user: icansible
+    become_method: sudo
+    with_items:
+    - {rolename: ansible}
+    - {rolename: common}
+    - {rolename: ec2-hosts}
+
+  - name: Create role file structure
+    file:
+      path: ~/ansible/roles/{{item.rolename}}/templates
+      state: directory
+      mode: 0755
+    become: yes
+    become_user: icansible
+    become_method: sudo
+    with_items:
+    - {rolename: ansible}
+    - {rolename: common}
+    - {rolename: ec2-hosts}
+
+  - name: Create role file structure
+    file:
+      path: ~/ansible/roles/{{item.rolename}}/defaults
+      state: directory
+      mode: 0755
+    become: yes
+    become_user: icansible
+    become_method: sudo
+    with_items:
+    - {rolename: ansible}
+    - {rolename: common}
+    - {rolename: ec2-hosts}
+
+  - name: Create role file structure
+    file:
+      path: ~/ansible/roles/{{item.rolename}}/files
+      state: directory
+      mode: 0755
+    become: yes
+    become_user: icansible
+    become_method: sudo
+    with_items:
+    - {rolename: ansible}
+    - {rolename: common}
+    - {rolename: ec2-hosts}
+
+

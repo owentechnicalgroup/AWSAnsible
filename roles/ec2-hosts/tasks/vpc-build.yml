@@ -1,9 +1,3 @@
-    - name: setup to assume role
-      sts_assume_role:
-        role_arn: "arn:aws:iam::872347420764:role/provisionSecurityGroup"
-        role_session_name: "EC2AutmatedProvisioning"
-        region: "{{ AWSDefaultRegion }}"
-      register: assumed_role
 
     - name: build primary vpc 
       ec2_vpc:
@@ -34,20 +28,5 @@
         - { SubnetCat: Monitoring, SubnetCIDR:  172.22.96.0/20, Internet: Not Connected }
       register: devSubnets
 
-    - debug:
-        msg: "{{ devSubnets }}"
-
-    - name: Getting subnet facts
-      ec2_vpc_subnet_facts:
-        aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
-        aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
-        security_token: "{{ assumed_role.sts_creds.session_token }}"
-        region: "{{ AWSDefaultRegion }}"
-        filters:
-          "tag:SubnetCat": Base
-      register: baseSubnet
-
-    - debug:
-        msg: "{{ baseSubnet }}"
 
 
