@@ -22,13 +22,11 @@
         state: present
         vpc_id: "{{ vpc.vpc.id }}"
         cidr: "{{ item.SubnetCIDR }}"
-        resource_tags: {"Name":"{{item.SubnetCat}}", "InstanceType": "Subnet","Environment":"{{VPCEnvironment}}", "SubnetCat":"{{item.SubnetCat}}", "WebGateway":"{{item.Internet}}"}
+        az: "{{AWSAvailZoneOpt1}}"
+        resource_tags: {"Name":"{{item.SubnetCat}}-{{AWSAvailZoneOpt1}}","InstanceType": "Subnet","Environment":"{{VPCEnvironment}}", "SubnetCat":"{{item.SubnetCat}}", "WebGateway":"{{item.Internet}}"}
       register: database_subnet
       with_items:
-        - { SubnetCat: Base, SubnetCIDR: 172.22.0.0/20, Internet: Connected }
-        - { SubnetCat: Database, SubnetCIDR: 172.22.32.0/20, Internet: NotConnected }
-        - { SubnetCat: Integration, SubnetCIDR: 172.22.80.0/20, Internet: Connected }
-        - { SubnetCat: Monitoring, SubnetCIDR:  172.22.96.0/20, Internet: Not Connected }
+        "{{AWSSubnetAZ1}}"
       register: devSubnets
 
 

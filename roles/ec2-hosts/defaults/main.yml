@@ -1,8 +1,21 @@
 VPCEnvironment: Development
 VPCDevCIDR: 172.22.0.0/16
 AWSDefaultRegion: us-east-1
+AWSAvailZoneOpt1: us-east-1a
+AWSAvailZoneOpt2: us-east-1d
 CleanupVPC: false
 CleanupSubnets: true
 PublicRoutingTableName: Public{{ VPCEnvironment }}
 PrivateRoutingTableName: Private{{ VPCEnvironment }}
+AWSSubnetAZ1:
+- { SubnetCat: Base, SubnetCIDR: 172.22.0.0/20, Internet: Connected }
+- { SubnetCat: Database, SubnetCIDR: 172.22.32.0/20, Internet: NotConnected }
+- { SubnetCat: Integration, SubnetCIDR: 172.22.80.0/20, Internet: Connected }
+- { SubnetCat: Monitoring, SubnetCIDR:  172.22.96.0/20, Internet: Not Connected }
 
+AWSSubnetAZ2:
+- { SubnetCat: Base, SubnetCIDR: 172.24.0.0/20, Internet: Connected }
+- { SubnetCat: Database, SubnetCIDR: 172.24.32.0/20, Internet: NotConnected }
+- { SubnetCat: Integration, SubnetCIDR: 172.24.80.0/20, Internet: Connected }
+- { SubnetCat: Monitoring, SubnetCIDR:  172.24.96.0/20, Internet: Not Connected }
+  
