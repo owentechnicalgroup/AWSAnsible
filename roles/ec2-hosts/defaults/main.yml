@@ -1,6 +1,7 @@
 VPCEnvironment: Development
 VPCDevCIDR: 172.22.0.0/16
 AWSDefaultRegion: us-east-1
+CleanupVPC: false
 CleanupSubnets: true
 PublicRoutingTableName: Public{{ VPCEnvironment }}
 PrivateRoutingTableName: Private{{ VPCEnvironment }}

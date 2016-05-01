@@ -5,6 +5,11 @@
     region: "{{ AWSDefaultRegion }}"
   register: assumed_role
 
+- include: clean-vpc.yml
+  when: CleanupVPC == "true"
+
 - include: vpc-build.yml 
 
 - include: gateway-build.yml
+
+- include: snapshot.yml

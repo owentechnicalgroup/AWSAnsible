@@ -1,0 +1,14 @@
+---
+
+    - name: Delete vpc
+      ec2_vpc_net:
+        aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+        aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+        security_token: "{{ assumed_role.sts_creds.session_token }}"
+        region: "{{ AWSDefaultRegion }}"
+        state: absent
+        cidr_block: "{{VPCDevCIDR}}"
+        resource_tags: { "InstanceType": "VPC","Environment":"{{VPCEnvironment}}" }
+        name: "{{VPCEnvironment}}"
+      register: vpc
+

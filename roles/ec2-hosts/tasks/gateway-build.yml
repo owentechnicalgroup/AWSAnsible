@@ -61,38 +61,38 @@
   - set_fact:
       publicRouteTableCount: "{{publicRouteTable.route_tables| length()}}"
 
-  - name: Set up public subnet route table if it does not exist
-    ec2_vpc_route_table:
-      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
-      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
-      security_token: "{{ assumed_role.sts_creds.session_token }}"
-      vpc_id: "{{ vpcDetail.vpcs[0].id }}"
-      region: "{{ AWSDefaultRegion }}"
-      tags:
-        Name: "{{PublicRoutingTableName}}"
-      subnets: "{{PublicGatewaySubnets}}"
-      routes:
-        - dest: 0.0.0.0/0
-          gateway_id: "{{ igw.results[0].gateway_id }}"
-    register: public_route_table
-    when: '"{{publicRouteTableCount}}" == "0"'
+#  - name: Set up public subnet route table if it does not exist
+#    ec2_vpc_route_table:
+#      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+#      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+#      security_token: "{{ assumed_role.sts_creds.session_token }}"
+#      vpc_id: "{{ vpcDetail.vpcs[0].id }}"
+#      region: "{{ AWSDefaultRegion }}"
+#      tags:
+#        Name: "{{PublicRoutingTableName}}"
+#      subnets: "{{PublicGatewaySubnets}}"
+#      routes:
+#        - dest: 0.0.0.0/0
+#          gateway_id: "{{ igw.results[0].gateway_id }}"
+#    register: public_route_table
+#    when: '"{{publicRouteTableCount}}" == "0"'
 
-  - name: Update public subnet route table if it does exist
-    ec2_vpc_route_table:
-      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
-      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
-      security_token: "{{ assumed_role.sts_creds.session_token }}"
-      route_table_id: "{{ publicRouteTable.route_tables[0].id }}"
-      vpc_id: "{{ publicRouteTable.route_tables[0].vpc_id }}"
-      region: "{{ AWSDefaultRegion }}"
-      lookup: id
-      tags:
-        Name: "{{PublicRoutingTableName}}"
-      subnets: "{{PublicGatewaySubnets}}"
-      routes:
-        - dest: 0.0.0.0/0
-          gateway_id: "{{ igw.results[0].gateway_id }}"
-    when: '"{{publicRouteTableCount}}" != "0"'
+#  - name: Update public subnet route table if it does exist
+#    ec2_vpc_route_table:
+#      aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+#      aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+#      security_token: "{{ assumed_role.sts_creds.session_token }}"
+#      route_table_id: "{{ publicRouteTable.route_tables[0].id }}"
+#      vpc_id: "{{ publicRouteTable.route_tables[0].vpc_id }}"
+#      region: "{{ AWSDefaultRegion }}"
+#      lookup: id
+#      tags:
+#        Name: "{{PublicRoutingTableName}}"
+#      subnets: "{{PublicGatewaySubnets}}"
+#      routes:
+#        - dest: 0.0.0.0/0
+#          gateway_id: "{{ igw.results[0].gateway_id }}"
+#    when: '"{{publicRouteTableCount}}" != "0"'
 
   - name: Get vpc route table detail for private route table
     ec2_vpc_route_table_facts:
