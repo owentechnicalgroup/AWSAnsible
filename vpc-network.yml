@@ -1,5 +1,5 @@
 - hosts: localhost
   roles:
-    - ec2-hosts
+    - vpc-network
 
 

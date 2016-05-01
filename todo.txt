@@ -1,8 +1,0 @@
-ansible-playbook ec2-hosts.yml --extra-vars '{"CleanupVPC":"false"}'
-
-TODO: Setup Public Routing Table
-NOTE: Leave default routing table alone
-      Add new routing table with gateway
-      Associate public subnets with the new routing table
-
-

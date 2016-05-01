@@ -1,9 +1,0 @@
----
-
-- name: Gather EC2 Facts
-  ec2_facts:
-  register: ec2_facts
-
-- debug:
-    msg: "{{ec2_facts}}"
-
